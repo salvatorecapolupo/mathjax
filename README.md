@@ -1,6 +1,4 @@
-Ecco una breve spiegazione tecnica di quanto fornito:
-
-# Editor LaTeX Live - Spiegazione
+# Editor LaTeX in HTML
 
 **Cos'è:**
 È un'applicazione web contenuta in un singolo file HTML (senza bisogno di server) che funge da *sandbox* per scrivere e visualizzare formule matematiche in tempo reale usando la sintassi LaTeX per il web.
