@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor LaTeX in HTML</title>
+    
+    <script>
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Riconosce $...$ come formula
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+        },
+        options: {
+            ignoreHtmlClass: 'tex2jax_ignore',
+            processHtmlClass: 'tex2jax_process'
+        }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        
+        /* Area di Input */
+        .editor-section { margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        textarea { 
+            width: 100%; height: 120px; padding: 10px; 
+            border: 1px solid #ccc; border-radius: 4px; 
+            font-family: 'Courier New', Courier, monospace; font-size: 16px; 
+            resize: vertical; box-sizing: border-box;
+        }
+        textarea:focus { outline: 2px solid #3498db; border-color: transparent; }
+
+        /* Area di Output */
+        #preview-box {
+            min-height: 120px; padding: 20px; margin-top: 10px;
+            border: 2px solid #e0e0e0; border-radius: 4px; background: #fafafa;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 1.3em; overflow-x: auto;
+        }
+        
+        /* Messaggi di errore personalizzati (oltre a quelli di MathJax) */
+        #error-msg { color: #e74c3c; font-size: 0.9em; margin-top: 5px; height: 1.2em; font-weight: bold; }
+
+        /* Tabella Esempi */
+        .examples-section { margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        code { background-color: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #c7254e; cursor: pointer; }
+        code:hover { background-color: #ddd; }
+        .copy-hint { font-size: 0.8em; color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Editor LaTeX HTML Live</h2>
+    
+    <div class="editor-section">
+        <label for="latex-input">Inserisci qui le formule (usa <code>$$</code> all'inizio e alla fine):</label>
+        <textarea id="latex-input" spellcheck="false" placeholder="Esempio: $$ x = \frac{-b \pm \sqrt{\Delta}}{2a} $$">$$ P(x) = x^3 - 3x + 2 $$</textarea>
+        <div id="error-msg"></div>
+    </div>
+
+    <div class="editor-section">
+        <label>Risultato:</label>
+        <div id="preview-box"></div>
+    </div>
+
+    <div class="examples-section">
+        <h3>Istruzioni ed Esempi</h3>
+        <p>Copia il codice dalla colonna di destra e incollalo nel box in alto. <span class="copy-hint">Le formule devono essere racchiuse tra <code>$$</code> per il blocco centrale o <code>$</code> per la linea singola.</span></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%">Categoria</th>
+                    <th style="width: 80%">Codice (Copia questo)</th>
+                </tr>
+            </thead>
+            <tbody id="example-table-body">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Riferimenti agli elementi
+    const inputArea = document.getElementById('latex-input');
+    const previewBox = document.getElementById('preview-box');
+    const errorMsg = document.getElementById('error-msg');
+    const tableBody = document.getElementById('example-table-body');
+
+    // Funzione di rendering sicura con Promise
+    let renderPromise = Promise.resolve();
+
+    function renderMath() {
+        const text = inputArea.value;
+        
+        // Pulisce il box di output e inserisce il testo grezzo
+        // MathJax trasformerà il testo grezzo in formule
+        previewBox.innerText = text; 
+        errorMsg.innerText = ""; // Resetta errori personalizzati
+
+        // Accoda il rendering alla promise chain per evitare race conditions
+        renderPromise = renderPromise.then(() => {
+            return MathJax.typesetPromise([previewBox]);
+        }).catch((err) => {
+            // MathJax gestisce i propri errori visuali, ma catturiamo problemi di sistema
+            errorMsg.innerText = "Errore di rendering: " + err.message;
+            console.error(err);
+        });
+    }
+
+    // Event Listener per digitazione in tempo reale
+    inputArea.addEventListener('input', renderMath);
+
+    // Rendering iniziale
+    window.addEventListener('load', renderMath);
+
+    // --- GENERAZIONE DEI 30 ESEMPI ---
+    const examples = [
+        // POLINOMI
+        { cat: "Polinomi", code: "$$ 3x^2 + 5x - 7 = 0 $$" },
+        { cat: "Polinomi", code: "$$ P(x) = \\sum_{i=0}^{n} a_i x^i $$" },
+        { cat: "Polinomi", code: "$$ (a+b)^3 = a^3 + 3a^2b + 3ab^2 + b^3 $$" },
+        { cat: "Polinomi", code: "$$ x^{10} - 1 = (x-1)(x^9 + x^8 + \\dots + 1) $$" },
+        { cat: "Polinomi", code: "$$ f(x) = 2x^4 - \\frac{1}{2}x^2 + \\pi $$" },
+        { cat: "Polinomi", code: "$$ \\Delta = b^2 - 4ac $$" },
+        { cat: "Polinomi", code: "$$ (x-x_1)(x-x_2) = x^2 - Sx + P $$" },
+        { cat: "Polinomi", code: "$$ x_1, x_2 = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} $$" },
+
+        // FRAZIONI
+        { cat: "Frazioni", code: "$$ \\frac{a}{b} + \\frac{c}{d} = \\frac{ad+bc}{bd} $$" },
+        { cat: "Frazioni", code: "$$ \\frac{1}{1 + \\frac{1}{x}} $$" },
+        { cat: "Frazioni", code: "$$ \\frac{\\partial f}{\\partial x} $$" },
+        { cat: "Frazioni", code: "$$ \\frac{\\sin(x)}{x} \\to 1 $$" },
+        { cat: "Frazioni", code: "$$ \\frac{\\sqrt{x^2+1}}{x-1} $$" },
+        { cat: "Frazioni", code: "$$ \\frac{n!}{k!(n-k)!} = \\binom{n}{k} $$" },
+        { cat: "Frazioni", code: "$$ y = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}} $$" },
+
+        // DISEQUAZIONI
+        { cat: "Disequazioni", code: "$$ x^2 - 4 > 0 $$" },
+        { cat: "Disequazioni", code: "$$ \\frac{x-1}{x+2} \\le 0 $$" },
+        { cat: "Disequazioni", code: "$$ |x - 3| < \\epsilon $$" },
+        { cat: "Disequazioni", code: "$$ \\forall x \\in \\mathbb{R}, x^2 \\ge 0 $$" },
+        { cat: "Disequazioni", code: "$$ -1 \\le \\sin(x) \\le 1 $$" },
+        { cat: "Disequazioni", code: "$$ x \\neq y \\implies x^2 \\neq y^2 $$" }, // Nota logica ma usata in diseq
+        { cat: "Disequazioni", code: "$$ 2^{x} > 8 \\iff x > 3 $$" },
+        { cat: "Disequazioni", code: "$$ \\sqrt{x^2 - 1} < x + 2 $$" },
+
+        // SISTEMI
+        { cat: "Sistemi", code: "$$ \\begin{cases} x + y = 10 \\\\ x - y = 2 \\end{cases} $$" },
+        { cat: "Sistemi", code: "$$ \\begin{cases} 3x - y > 0 \\\\ x + 2y \\le 4 \\end{cases} $$" },
+        { cat: "Sistemi", code: "$$ \\left\\{ \\begin{array}{l} ax + by = c \\\\ dx + ey = f \\end{array} \\right. $$" },
+        { cat: "Sistemi", code: "$$ |x| = \\begin{cases} x & \\text{se } x \\ge 0 \\\\ -x & \\text{se } x < 0 \\end{cases} $$" },
+        { cat: "Sistemi", code: "$$ \\begin{cases} x = \\rho \\cos \\theta \\\\ y = \\rho \\sin \\theta \\end{cases} $$" },
+        { cat: "Sistemi", code: "$$ \\begin{cases} x+y+z=1 \\\\ 2x-y=0 \\\\ z=3 \\end{cases} $$" },
+        { cat: "Sistemi", code: "$$ \\begin{cases} x^2 + y^2 = 1 \\\\ y = x \\end{cases} $$" }
+    ];
+
+    // Popolamento tabella
+    examples.forEach(ex => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td><b>${ex.cat}</b></td><td><code>${ex.code}</code></td>`;
+        tableBody.appendChild(row);
+    });
+</script>
+
+</body>
+</html>
