@@ -41,4 +41,4 @@ La differenza fondamentale risiede nello scopo: uno serve per **scrivere** (form
 | **Output** | Immagine/Grafica della formula | Risultato numerico o simbolico |
 | **Errore se:** | Sbagli le parentesi del codice | Dividi per zero o sintassi invalida |
 
-**In sintesi:** Usi il codice che ti ho dato per **mostrare** i compiti a casa sul web; useresti MathJS per **farli** risolvere al computer.
+Usi il codice che ti ho dato per **mostrare** in modo chiaro i compiti a casa sul web; utilizzi MathJS per **verificare** al computer i calcoli fatti (i calcoli falli sempre a mano, prima!).
